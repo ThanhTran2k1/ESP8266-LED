@@ -1,9 +1,51 @@
 #include <Arduino.h>
 
-void setup() {
-  // put your setup code here, to run once:
-}
+#include <DMDESP.h>
+#include <fonts/ElektronMart6x8.h>
+#include <fonts/EMSans5x6.h>
+//----------------------------------------
 
-void loop() {
-  // put your main code here, to run repeatedly:
+//----------------------------------------DMD Configuration (P10 Panel)
+#define DISPLAYS_WIDE 1 //--> Panel Columns
+#define DISPLAYS_HIGH 1 //--> Panel Rows
+DMDESP Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  //--> Number of Panels P10 used (Column, Row)
+//----------------------------------------
+static char *Text[] = {"123456789--"};
+
+void Scrolling_Text(int y, uint8_t scrolling_speed) {
+  static uint32_t pM;
+  static uint32_t x;
+  int width = Disp.width();
+  Disp.setFont(EMSans5x6);
+  int fullScroll = Disp.textWidth(Text[0]) + width;
+  if((millis() - pM) > scrolling_speed) { 
+    pM = millis();
+    if (x < fullScroll) {
+      ++x;
+    } else {
+      x = 0;
+      return;
+    }
+    Disp.drawText(width - x, y, Text[0]);
+  }  
 }
+//========================================================================VOID SETUP()
+void setup() {
+  //----------------------------------------DMDESP Setup
+  Disp.start(); //--> Run the DMDESP library
+  Disp.setBrightness(100); //--> Brightness level
+  Disp.setFont(EMSans5x6); //--> Determine the font used
+  //----------------------------------------
+}
+//========================================================================
+
+//========================================================================VOID LOOP()
+void loop() {
+  Disp.loop(); //--> Run "Disp.loop" to refresh the LED
+  Disp.drawText(0, 0, "1234567"); //--> Display text "Disp.drawText(x position, y position, text)"
+  // Disp.drawText(0,9,"122334455");
+ Scrolling_Text(9, 60); //--> Show running text "Scrolling_Text(y position, speed);"
+}
+//========================================================================
+
+//========================================================================Subroutines for scrolling Text
