@@ -45,6 +45,4 @@ void loop() {
   // Disp.drawText(0,9,"122334455");
  Scrolling_Text(8, 60); //--> Show running text "Scrolling_Text(y position, speed);"
 }
-//========================================================================
 
-//========================================================================Subroutines for scrolling Text
