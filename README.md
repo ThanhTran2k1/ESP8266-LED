@@ -1,1 +1,8 @@
 # ESP8266-LED
+OE - D8
+GND - GND
+A - D0
+B - D6
+CLK - D5
+LAT - D3
+DR - D7

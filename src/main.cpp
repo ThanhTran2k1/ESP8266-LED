@@ -127,28 +127,42 @@ void Scrolling_text(int text_height , int scroll_speed , String scroll_text ) {
 
 }
 void setup() {
+  // P10.begin();              // Begin the display & font
+  // P10.setFont(FONT);
+  // P10.setBrightness(50);    // Set the brightness
+  pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   Serial.begin(115200);
-  P10.begin();              // Begin the display & font
-  P10.setFont(FONT);
-  P10.setBrightness(50);    // Set the brightness
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-  // P10.drawText(0 , 0, " :) "); // P10.drawText(position x , position y, String type text);
+ // P10.drawText(0 , 0, " :) "); // P10.drawText(position x , position y, String type text);
 
 }
 
 void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
 
+  unsigned long now = millis();
+  if (now - lastMsg > 2000) {
+    lastMsg = now;
+    ++value;
+    snprintf (msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish("outTopic", msg);
+  }
   P10.loop();          // Run DMD loop
 
-  if (Serial.available() > 0) {        // Save message from serial
-    Message =  Serial.readString();
-  }
+  // if (Serial.available() > 0) {        // Save message from serial
+  //   Message =  Serial.readString();
+  // }
 
   Scrolling_text(0 , 50 , Message ); // Call the function to write scrolling text on screen.
                                      // like -> Scrolling_text( position y , scroll speed, String type text);
-                                     // or for not scroll -> P10.drawText(position x , position y, String type text);
+                                     //or for not scroll -> P10.drawText(position x , position y, String type text);
 
   
 
