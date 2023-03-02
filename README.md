@@ -1,4 +1,5 @@
 # ESP8266-LED
+Cách kết nối chân P10 - ESP8266
 OE - D8
 GND - GND
 A - D0
