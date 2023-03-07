@@ -2,6 +2,78 @@
 #include <DMDESP.h>
 // #include <fonts/ElektronMart6x8.h>
 #include <fonts/DejaVuSansItalic9.h>
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <TaskScheduler.h>
+
+const char* ssid = "AIoT JSC";
+const char* password = "aiot1234@";
+
+const int mqtt_port = 1883;
+const char* mqtt_topic = "test";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+Scheduler runner;
+
+void connectWiFiCallback() {
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  randomSeed(micros());
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  
+}
+
+Task connectWiFi(500,TASK_FOREVER,&connectWiFiCallback,&runner);
+
+
+
+
+// void connect() {
+//   // Kết nối Wifi
+//   WiFi.begin(ssid, password);
+//   while (WiFi.status() != WL_CONNECTED) {
+//     delay(1000);
+//   }
+  
+//   // Kết nối MQTT
+//   while (!client.connected()) {
+//     if (client.connect("ESP8266Client")) {
+//       Serial.println("MQTT connected");
+//       client.subscribe(mqtt_topic);
+//     } else {
+//       delay(1000);
+//     }
+//   }
+// }
+
+void setup() {
+  // runner.startNow();
+  connectWiFi.enable();
+
+}
+
+void loop(){
+  runner.execute();
+}
+
+
+
 //----------------------------------------
 /**
 A	D0
