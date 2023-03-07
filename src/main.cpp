@@ -2,7 +2,26 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <TaskScheduler.h>
+//khai báo thư viện
 #include <DMDESP.h>
+#include <fonts/Mono5x7.h>
+
+/**
+A	D0
+B	D6
+CLK	D5
+SCK	D3
+R	D7
+NOE	D8
+GND	GND
+*/
+// Khai báo để quét LED P10
+#define DISPLAYS_WIDE 2 //--> Panel Columns
+#define DISPLAYS_HIGH 1 //--> Panel Rows
+DMDESP Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  //--> Number of Panels P10 used (Column, Row)
+String message = "";
+
+
 Scheduler runner;
 // Callback methods prototypes
 void setupWiFi();
@@ -12,7 +31,7 @@ void connectMQTTCallback();
 // Tasks
 Task t4();
 Task t1(2000, TASK_ONCE, &setupWiFi, &runner, true);  //adding task to the chain on creation
-Task t2(2000, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the chain on creation
+Task t2(0.2, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the chain on creation
 Task t3(5000, TASK_FOREVER, &t3Callback);
 Task connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
 //wifi
@@ -21,22 +40,28 @@ const char* password = "aiot1234@";
 //mqtt server
 const char* mqtt_server = "192.168.1.133";
 const uint16_t mqtt_port = 1883;
+//text Scrolling
+static char *Text[]={""};
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 void callback(char* topic, byte* payload, int length) 
 {
-  Serial.print("Co tin nhan moi tu topic:");
+
+  Serial.print("Co tin nhan moi tu topic: ");
   Serial.println(topic);
-  for (int i = 0; i < length; i++) 
-  Serial.print((char)payload[i]);
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);   
+    message += (char)payload[i];
+  }
   Serial.println();
+  Serial.println(message);
 }
 
 void connectMQTTCallback() {
   client.setServer(mqtt_server,mqtt_port);
-  client.setCallback(callback);
+  
 }
 
 
@@ -59,8 +84,8 @@ void setupWiFi() {
 }
 
 void t2Callback() {
-      Serial.print("t2: ");
-      Serial.println(millis());
+  client.setCallback(callback);
+  //  Disp.loop(); //--> Run "Disp.loop" to refresh the LED
   
 }
 
@@ -95,12 +120,50 @@ void reconnect() {
   Serial.println("Da ket noi MQTT thanh cong !");
 }
 
+// void Scrolling_String(int y, String str, uint8_t scrolling_speed) {
+//   static uint32_t pM;
+//   static uint32_t x;
+//   int width = Disp.width();
+//   Disp.setFont(Mono5x7);
+//   int fullScroll = Disp.textWidth(&str[0]) + width;
+//   if((millis() - pM) > scrolling_speed) { 
+//     pM = millis();
+//     if (x < fullScroll) {
+//       ++x;
+//     } else {
+//       x = 0;
+//       return;
+//     }
+//     Disp.drawText(width - x, y, &str[0]);
+//   }
+// }
+
+
+void Scrolling_Text(int y, uint8_t scrolling_speed) {
+  static uint32_t pM;
+  static int x;
+  int width = Disp.width();
+  Disp.setFont(Mono5x7);
+  int fullScroll = Disp.textWidth(Text[0]) + width;
+  if((millis() - pM) > scrolling_speed) { 
+    pM = millis();
+    if (x < fullScroll) {
+      ++x;
+    } else {
+      x = 0;
+      return;
+    }
+    Disp.drawText(width - x, y, Text[0]);
+  }  
+}
 
 void setup () {
   Serial.begin(115200);
   delay(1000);
   Serial.println("Scheduler TEST");
-  
+  Disp.start(); //--> Run the DMDESP library
+  Disp.setBrightness(100); //--> Brightness level
+  Disp.setFont(Mono5x7); //--> Determine the font used
   runner.startNow();  // set point-in-time for scheduling start
 }
 
@@ -112,6 +175,9 @@ void loop () {
     reconnect();
   }
   client.loop();
+  Disp.loop(); //--> Run "Disp.loop" to refresh the LED
+  // Disp.drawText(0, 0, "12345678910"); //--> Display text "Disp.drawText(x position, y position, text)"
+  Scrolling_Text(8, 30); //--> Show running text "Scrolling_Text(y position, speed);"
 //  Serial.println("Loop ticks at: ");
 //  Serial.println(millis());
 }
