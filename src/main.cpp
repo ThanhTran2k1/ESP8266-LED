@@ -5,8 +5,10 @@
 //khai báo thư viện
 #include <DMDESP.h>
 #include <fonts/Mono5x7.h>
+#include <ArduinoJson.h>
 
 /**
+ * ket noi chan
 A	D0
 B	D6
 CLK	D5
@@ -35,7 +37,7 @@ Task t2(0.2, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the ch
 Task t3(5000, TASK_FOREVER, &t3Callback);
 Task connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
 //wifi
-const char* ssid = "AIoT JSC";
+const char* ssid = "AIoT Tang 1";
 const char* password = "aiot1234@";
 //mqtt server
 const char* mqtt_server = "aiot-jsc1.ddns.net";
@@ -44,24 +46,40 @@ const char* usernameMQTT = "bangled";
 const char* passMQTT = "bangled";
 //text Scrolling
 static char *Text[]={"12345"};
-
+const char* line1_str = NULL;
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+
+//arduino json
+DynamicJsonDocument doc(1024);
 
 void callback(char* topic, byte* payload, int length) 
 {
   Serial.print("Co tin nhan moi tu topic: ");
   Serial.println(topic);
   for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);   
+    // Serial.print((char)payload[i]);   
     message += (char)payload[i];
   }
-  
-  const char *msg = message.c_str();
-  Text[0] = (char*)msg;  
-  Serial.println();
+    DeserializationError error = deserializeJson(doc, message);
+    if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.f_str());
+    return;
+  }
+  int line = doc["line"];
+  const char* content = doc["content"];
+  Serial.println(line);
+  Serial.println(content);
+  if(line == 1) {
+    strcpy(line1_str,content);
+  }
+  // free(line1_str);
+  if(line == 2) {
+     strcpy(Text[0],content);
+  }
   Serial.println(message);
-  message.clear();
 }
 
 void connectMQTTCallback() {
@@ -113,8 +131,7 @@ void reconnect() {
       // Once connected, publish an announcement...
       client.publish("outTopic", "hello world");
       // ... and resubscribe
-      client.subscribe("scrolling-text");
-      client.subscribe("static-text");
+      client.subscribe("text-content");
     } else {
       Serial.print("Kết nối MQTT thất bại, rc=");
       Serial.print(client.state());
@@ -125,25 +142,6 @@ void reconnect() {
   }
   Serial.println("Da ket noi MQTT thanh cong !");
 }
-
-// void Scrolling_String(int y, String str, uint8_t scrolling_speed) {
-//   static uint32_t pM;
-//   static uint32_t x;
-//   int width = Disp.width();
-//   Disp.setFont(Mono5x7);
-//   int fullScroll = Disp.textWidth(&str[0]) + width;
-//   if((millis() - pM) > scrolling_speed) { 
-//     pM = millis();
-//     if (x < fullScroll) {
-//       ++x;
-//     } else {
-//       x = 0;
-//       return;
-//     }
-//     Disp.drawText(width - x, y, &str[0]);
-//   }
-// }
-
 
 void Scrolling_Text(int y, uint8_t scrolling_speed) {
   static uint32_t pM;
@@ -182,7 +180,7 @@ void loop () {
   }
   client.loop();
   Disp.loop(); //--> Run "Disp.loop" to refresh the LED
-  Disp.drawText(0, 0, "12345678910"); //--> Display text "Disp.drawText(x position, y position, text)"
+  Disp.drawText(0, 0, line1_str); //--> Display text "Disp.drawText(x position, y position, text)"
   Scrolling_Text(8, 60); //--> Show running text "Scrolling_Text(y position, speed);"
 //  Serial.println("Loop ticks at: ");
 //  Serial.println(millis());
