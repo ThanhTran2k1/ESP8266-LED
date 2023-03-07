@@ -3,7 +3,15 @@
 // #include <fonts/ElektronMart6x8.h>
 #include <fonts/DejaVuSansItalic9.h>
 //----------------------------------------
-
+/**
+A	D0
+B	D6
+CLK	D5
+SCK	D3
+R	D7
+NOE	D8
+GND	GND
+*/
 //----------------------------------------DMD Configuration (P10 Panel)
 #define DISPLAYS_WIDE 1 //--> Panel Columns
 #define DISPLAYS_HIGH 1 //--> Panel Rows
