@@ -16,7 +16,7 @@ NOE	D8
 GND	GND
 */
 // Khai báo để quét LED P10
-#define DISPLAYS_WIDE 2 //--> Panel Columns
+#define DISPLAYS_WIDE 1 //--> Panel Columns
 #define DISPLAYS_HIGH 1 //--> Panel Rows
 DMDESP Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  //--> Number of Panels P10 used (Column, Row)
 String message = "";
@@ -41,22 +41,24 @@ const char* password = "aiot1234@";
 const char* mqtt_server = "192.168.1.133";
 const uint16_t mqtt_port = 1883;
 //text Scrolling
-static char *Text[]={""};
+static char *Text[]={"12345"};
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 void callback(char* topic, byte* payload, int length) 
 {
-
   Serial.print("Co tin nhan moi tu topic: ");
   Serial.println(topic);
   for (int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);   
     message += (char)payload[i];
   }
+  const char *msg = message.c_str();
+  Text[0] = (char*)msg;  
   Serial.println();
   Serial.println(message);
+  message.clear();
 }
 
 void connectMQTTCallback() {
@@ -85,6 +87,7 @@ void setupWiFi() {
 
 void t2Callback() {
   client.setCallback(callback);
+  // message = "";
   //  Disp.loop(); //--> Run "Disp.loop" to refresh the LED
   
 }
@@ -108,7 +111,8 @@ void reconnect() {
       // Once connected, publish an announcement...
       client.publish("outTopic", "hello world");
       // ... and resubscribe
-      client.subscribe("inTopic");
+      client.subscribe("scrolling-text");
+      client.subscribe("static-text");
     } else {
       Serial.print("Kết nối MQTT thất bại, rc=");
       Serial.print(client.state());
@@ -176,8 +180,8 @@ void loop () {
   }
   client.loop();
   Disp.loop(); //--> Run "Disp.loop" to refresh the LED
-  // Disp.drawText(0, 0, "12345678910"); //--> Display text "Disp.drawText(x position, y position, text)"
-  Scrolling_Text(8, 30); //--> Show running text "Scrolling_Text(y position, speed);"
+  Disp.drawText(0, 0, "12345678910"); //--> Display text "Disp.drawText(x position, y position, text)"
+  Scrolling_Text(8, 60); //--> Show running text "Scrolling_Text(y position, speed);"
 //  Serial.println("Loop ticks at: ");
 //  Serial.println(millis());
 }
