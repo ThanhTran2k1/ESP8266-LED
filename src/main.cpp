@@ -38,8 +38,10 @@ Task connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
 const char* ssid = "AIoT JSC";
 const char* password = "aiot1234@";
 //mqtt server
-const char* mqtt_server = "192.168.1.133";
-const uint16_t mqtt_port = 1883;
+const char* mqtt_server = "aiot-jsc1.ddns.net";
+const uint16_t mqtt_port = 1889;
+const char* usernameMQTT = "bangled";
+const char* passMQTT = "bangled";
 //text Scrolling
 static char *Text[]={"12345"};
 
@@ -54,6 +56,7 @@ void callback(char* topic, byte* payload, int length)
     Serial.print((char)payload[i]);   
     message += (char)payload[i];
   }
+  
   const char *msg = message.c_str();
   Text[0] = (char*)msg;  
   Serial.println();
@@ -77,7 +80,7 @@ void setupWiFi() {
     delay(500);
     Serial.print(".");
   }
-  randomSeed(micros());
+  // randomSeed(micros());
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
@@ -103,10 +106,9 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Đang kết nối tới MQTT.....");
     // Create a random client ID
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
+    String clientId = "bangled";
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(clientId.c_str(),usernameMQTT,passMQTT)) {
       Serial.println("Đã kết nối!");
       // Once connected, publish an announcement...
       client.publish("outTopic", "hello world");
