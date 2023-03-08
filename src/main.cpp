@@ -1,20 +1,28 @@
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h>
-#include <TaskScheduler.h>
+#include <ESP8266WiFi.h> // Thư viện WIFI
+#include <PubSubClient.h> // Thư viện MQTT
+#include <TaskScheduler.h> // Thư viện lập lịch
 //khai báo thư viện
 #include <DMDESP.h>
 #include <fonts/Mono5x7.h>
+#include <fonts/ElektronMart6x16.h>
+#include <fonts/EMSans6x8.h>
+#include <fonts/EMSansSP8x16.h>
+#include <fonts/ElektronMart6x8.h>
+#include <fonts/ElektronMart6x12.h>
 #include <ArduinoJson.h>
+#include <WiFiManager.h>
+
 // Khai báo để quét LED P10
-#define DISPLAYS_WIDE 1 //--> Số cột của tấm LED
-#define DISPLAYS_HIGH 1 //--> Số hàng của tấm LED
+#define DISPLAYS_WIDE 2 //--> Số cột của tấm LED
+#define DISPLAYS_HIGH 2 //--> Số hàng của tấm LED
 // Khai báo WIDE = 1, HIGH = 1 tức là tấm LED 16x32;
 // Khai báo WIDE = 2, HIGH = 1 tức là tấm LED 16x64;
 // Khai báo WIDE = 2, HIGH = 2 tức là tấm LED 32x64;
 DMDESP Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  //--> Number of Panels P10 used (Column, Row)
 String message = "";
 
+WiFiManager wifiManager;
 
 Scheduler runner; // tạo con trỏ để chạy Scheduler
 // Callback methods prototypes
@@ -28,7 +36,7 @@ Task t1(2000, TASK_ONCE, &setupWiFi, &runner, true);  //adding task to the chain
 Task t2(0.2, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the chain on creation
 Task connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
 //wifi
-const char* ssid = "AIoT JSC"; // tên WIFI
+const char* ssid = "AIoT Tang 1"; // tên WIFI
 const char* password = "aiot1234@"; // Mật khẩu WIFI
 //mqtt server
 const char* mqtt_server = "aiot-jsc1.ddns.net"; // Server MQTT
@@ -140,7 +148,7 @@ void Scrolling_Text(int y, uint8_t scrolling_speed) {
   static uint32_t pM;
   static int x;
   int width = Disp.width();
-  Disp.setFont(Mono5x7); // Chọn font để hiển thị.
+  Disp.setFont(ElektronMart6x12); // Chọn font để hiển thị.
   int fullScroll = Disp.textWidth(Text[0]) + width;
   if((millis() - pM) > scrolling_speed) { 
     pM = millis();
@@ -160,7 +168,6 @@ void setup () {
   Serial.println("Start");
   Disp.start(); // Khởi tạo hàm hiển thị
   Disp.setBrightness(100); // Thay đổi độ sáng 
-  Disp.setFont(Mono5x7); //--> Xác định font chữ sử dụng để hiển thị dòng 1
   runner.startNow();  // Khởi tạo bộ lên lịch Scheduler và chạy bằng con trỏ runner
 }
 
@@ -174,7 +181,8 @@ void loop () {
   client.loop(); // Giữ kết nối.
   Disp.loop(); // Bắt buộc phải có hàm này trong loop để quét LED hiển thị
   Disp.drawText(0, 0, text_static); //Disp.drawText(vị trí x, vị trí y, String cần hiển thị)
-  Scrolling_Text(8, 60); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
+  // Disp.setFont(ElektronMart6x16);
+  Scrolling_Text(16, 60); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
   
 
 }
