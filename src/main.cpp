@@ -1,5 +1,9 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h> // Thư viện WIFI
+#include <WiFiManager.h>
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <EEPROM.h>
 #include <PubSubClient.h> // Thư viện MQTT
 #include <TaskScheduler.h> // Thư viện lập lịch
 //khai báo thư viện
@@ -11,7 +15,7 @@
 #include <fonts/ElektronMart6x8.h>
 #include <fonts/ElektronMart6x12.h> //  chưa tìm ra cách set _font qua MQTT, vẫn phải set font bằng fix cứng
 #include <ArduinoJson.h>
-#include <WiFiManager.h>
+
 
 // Khai báo để quét LED P10
 #define DISPLAYS_WIDE 2 //--> Số cột của tấm LED
