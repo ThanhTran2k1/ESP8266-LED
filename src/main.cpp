@@ -9,7 +9,7 @@
 #include <fonts/EMSans6x8.h>
 #include <fonts/EMSansSP8x16.h>
 #include <fonts/ElektronMart6x8.h>
-#include <fonts/ElektronMart6x12.h>
+#include <fonts/ElektronMart6x12.h> //  chưa tìm ra cách set _font qua MQTT, vẫn phải set font bằng fix cứng
 #include <ArduinoJson.h>
 #include <WiFiManager.h>
 
@@ -21,7 +21,7 @@
 // Khai báo WIDE = 2, HIGH = 2 tức là tấm LED 32x64;
 DMDESP Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  //--> Number of Panels P10 used (Column, Row)
 String message = "";
-
+int speed_scroll = 50; //  tốc độ cuộn, tốc độ càng thấp cuộn càng nhanh.
 WiFiManager wifiManager;
 
 Scheduler runner; // tạo con trỏ để chạy Scheduler
@@ -31,7 +31,6 @@ void t2Callback();
 void t3Callback(); 
 void connectMQTTCallback();
 // Tasks
-Task t4();
 Task t1(2000, TASK_ONCE, &setupWiFi, &runner, true);  //adding task to the chain on creation
 Task t2(0.2, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the chain on creation
 Task connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
@@ -65,8 +64,8 @@ void callback(char* topic, byte* payload, int length)
 
   int line = doc["line"];
   String content = doc["content"];
-
-  Serial.print("Co tin nhan moi tu topic: ");
+  
+  Serial.print("Có tin nhắn mới từ topic: ");
   Serial.println(topic);
   Serial.print("Line: ");
   Serial.println(line);
@@ -75,20 +74,12 @@ void callback(char* topic, byte* payload, int length)
   if(line == 2) {
     // nếu line = 2 thì thay đổi giá trị của mảng Text[0] thành giá trị String content vừa nhận được.
     strcpy(Text[0],content.c_str());
+    speed_scroll = doc["speed"];
   }
   if(line == 1) {
     text_static = content;
   }
   content.clear();
-  Serial.print("Co tin nhan moi tu topic: ");
-  Serial.println(topic);
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);   
-    message += (char)payload[i];
-  }
-  Serial.println();
-  Serial.println(message);
-  message.clear();
 }
 // Kết nối tới MQTT server
 void connectMQTTCallback() {
@@ -104,11 +95,11 @@ void setupWiFi() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    Serial.print("..");
   }
   Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
+  Serial.println("Đã kết nối WiFi !");
+  Serial.println("Địa chỉ IP: ");
   Serial.println(WiFi.localIP());
   connectMQTT.enable(); // sau khi kết nối WIFI thì kết nối MQTT để nhận dữ liệu
 }
@@ -126,21 +117,19 @@ void reconnect() {
     String clientId = "bangled";
     // Attempt to connect
     if (client.connect(clientId.c_str(),usernameMQTT,passMQTT)) {
-      Serial.println("Đã kết nối!");
-      // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
+      Serial.println("Đã kết nối !");
       // ... and resubscribe
-      client.subscribe("text-content");
+      client.subscribe("text-content"); // topic cần subscribe
       // client.subscribe("static-text");
-    } else {
+    } else { // nếu không kết nối thì kết nối lại sau 5s
       Serial.print("Kết nối MQTT thất bại, rc=");
       Serial.print(client.state());
-      Serial.println(" Thử lại sau 5s");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      Serial.println(" Thử lại sau 3s");
+      // Đợi 3 giây trước khi kết nối lại
+      delay(3000);
     }
   }
-  Serial.println("Da ket noi MQTT thanh cong !");
+  Serial.println("Bắt đầu nhận nội dung từ MQTT !");
 }
 
 
@@ -182,7 +171,7 @@ void loop () {
   Disp.loop(); // Bắt buộc phải có hàm này trong loop để quét LED hiển thị
   Disp.drawText(0, 0, text_static); //Disp.drawText(vị trí x, vị trí y, String cần hiển thị)
   // Disp.setFont(ElektronMart6x16);
-  Scrolling_Text(16, 60); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
-  
+  Scrolling_Text(16, speed_scroll); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
+  // Disp.drawChar(0,0,'------');
 
 }
