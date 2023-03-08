@@ -113,8 +113,8 @@ void reconnect() {
       // Once connected, publish an announcement...
       client.publish("outTopic", "hello world");
       // ... and resubscribe
-      client.subscribe("scrolling-text");
-      client.subscribe("static-text");
+      client.subscribe("text-content");
+      // client.subscribe("static-text");
     } else {
       Serial.print("Kết nối MQTT thất bại, rc=");
       Serial.print(client.state());
@@ -182,7 +182,7 @@ void loop () {
   }
   client.loop();
   Disp.loop(); //--> Run "Disp.loop" to refresh the LED
-  Disp.drawText(0, 0, "12345678910"); //--> Display text "Disp.drawText(x position, y position, text)"
+  Disp.drawText(0, 0, "12345"); //--> Display text "Disp.drawText(x position, y position, text)"
   Scrolling_Text(8, 60); //--> Show running text "Scrolling_Text(y position, speed);"
 //  Serial.println("Loop ticks at: ");
 //  Serial.println(millis());
