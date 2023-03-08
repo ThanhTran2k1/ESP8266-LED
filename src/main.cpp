@@ -6,23 +6,17 @@
 #include <DMDESP.h>
 #include <fonts/Mono5x7.h>
 #include <ArduinoJson.h>
-/**
-A	D0
-B	D6
-CLK	D5
-SCK	D3
-R	D7
-NOE	D8
-GND	GND
-*/
 // Khai báo để quét LED P10
-#define DISPLAYS_WIDE 1 //--> Panel Columns
-#define DISPLAYS_HIGH 1 //--> Panel Rows
+#define DISPLAYS_WIDE 1 //--> Số cột của tấm LED
+#define DISPLAYS_HIGH 1 //--> Số hàng của tấm LED
+// Khai báo WIDE = 1, HIGH = 1 tức là tấm LED 16x32;
+// Khai báo WIDE = 2, HIGH = 1 tức là tấm LED 16x64;
+// Khai báo WIDE = 2, HIGH = 2 tức là tấm LED 32x64;
 DMDESP Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  //--> Number of Panels P10 used (Column, Row)
 String message = "";
 
 
-Scheduler runner;
+Scheduler runner; // tạo con trỏ để chạy Scheduler
 // Callback methods prototypes
 void setupWiFi();
 void t2Callback();
@@ -34,22 +28,22 @@ Task t1(2000, TASK_ONCE, &setupWiFi, &runner, true);  //adding task to the chain
 Task t2(0.2, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the chain on creation
 Task connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
 //wifi
-const char* ssid = "AIoT JSC";
-const char* password = "aiot1234@";
+const char* ssid = "AIoT JSC"; // tên WIFI
+const char* password = "aiot1234@"; // Mật khẩu WIFI
 //mqtt server
-const char* mqtt_server = "aiot-jsc1.ddns.net";
-const uint16_t mqtt_port = 1889;
-const char* usernameMQTT = "bangled";
-const char* passMQTT = "bangled";
+const char* mqtt_server = "aiot-jsc1.ddns.net"; // Server MQTT
+const uint16_t mqtt_port = 1889; // Nghe Port
+const char* usernameMQTT = "bangled"; // Tên đăng nhập MQTT
+const char* passMQTT = "bangled"; // Mật khẩu MQTT
 //text Scrolling
-static char *Text[]={"CONFIG-LED"};
+static char *Text[]={"CONFIG-LED"}; // Nội dung lần đầu khi nạp cho chip. Đây là dòng chạy scroll,. Nội dung này sẽ bị thay đổi khi có 1 payload bắn qua MQTT
 // text static
-String text_static = "MODE";
-WiFiClient espClient;
-PubSubClient client(espClient);
+String text_static = "MODE";// Nội dung lần đầu khi nạp cho chip. Đây là dòng đứng yên
+WiFiClient espClient;// Khai báo một Client
+PubSubClient client(espClient); // Khai báo PubSub để nhận dữ liệu
 
 //json
-DynamicJsonDocument doc(1024);
+DynamicJsonDocument doc(1024); // 
 
 void callback(char* topic, byte* payload, int length) 
 {
@@ -81,23 +75,19 @@ void callback(char* topic, byte* payload, int length)
   Serial.print("Co tin nhan moi tu topic: ");
   Serial.println(topic);
   for (int i = 0; i < length; i++) {
-    // Serial.print((char)payload[i]);   
+    Serial.print((char)payload[i]);   
     message += (char)payload[i];
   }
-  
-  // const char *msg = message.c_str();
-  // Text[0] = (char*)msg;  
   Serial.println();
   Serial.println(message);
   message.clear();
 }
-
+// Kết nối tới MQTT server
 void connectMQTTCallback() {
   client.setServer(mqtt_server,mqtt_port);
-  
 }
 
-
+// Kết nối WIFI. 
 void setupWiFi() {
   Serial.println();
   Serial.print("Đang kết nối tới ");
@@ -108,22 +98,18 @@ void setupWiFi() {
     delay(500);
     Serial.print(".");
   }
-  // randomSeed(micros());
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-  connectMQTT.enable();
+  connectMQTT.enable(); // sau khi kết nối WIFI thì kết nối MQTT để nhận dữ liệu
 }
 
 void t2Callback() {
-  client.setCallback(callback);
-  // message = "";
-  //  Disp.loop(); //--> Run "Disp.loop" to refresh the LED
-  
+  client.setCallback(callback); //  duy trì kết nối MQTT để nhận dữ liệu
 }
 
-
+// Nếu mất kết nối thì reconnect
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
@@ -154,7 +140,7 @@ void Scrolling_Text(int y, uint8_t scrolling_speed) {
   static uint32_t pM;
   static int x;
   int width = Disp.width();
-  Disp.setFont(Mono5x7);
+  Disp.setFont(Mono5x7); // Chọn font để hiển thị.
   int fullScroll = Disp.textWidth(Text[0]) + width;
   if((millis() - pM) > scrolling_speed) { 
     pM = millis();
@@ -171,24 +157,24 @@ void Scrolling_Text(int y, uint8_t scrolling_speed) {
 void setup () {
   Serial.begin(115200);
   delay(1000);
-  Serial.println("Scheduler TEST");
-  Disp.start(); //--> Run the DMDESP library
-  Disp.setBrightness(100); //--> Brightness level
-  Disp.setFont(Mono5x7); //--> Determine the font used
-  runner.startNow();  // set point-in-time for scheduling start
+  Serial.println("Start");
+  Disp.start(); // Khởi tạo hàm hiển thị
+  Disp.setBrightness(100); // Thay đổi độ sáng 
+  Disp.setFont(Mono5x7); //--> Xác định font chữ sử dụng để hiển thị dòng 1
+  runner.startNow();  // Khởi tạo bộ lên lịch Scheduler và chạy bằng con trỏ runner
 }
 
 
 void loop () {
   
-  runner.execute();
+  runner.execute(); // Xử lý bộ lên lịch
   if(!client.connected()) {
     reconnect();
-  }
-  client.loop();
-  Disp.loop(); //--> Run "Disp.loop" to refresh the LED
-  Disp.drawText(0, 0, text_static); //--> Display text "Disp.drawText(x position, y position, text)"
-  Scrolling_Text(8, 60); //--> Show running text "Scrolling_Text(y position, speed);"
-//  Serial.println("Loop ticks at: ");
-//  Serial.println(millis());
+  } // Nếu mất kết nối thì tự động kết nối lại
+  client.loop(); // Giữ kết nối.
+  Disp.loop(); // Bắt buộc phải có hàm này trong loop để quét LED hiển thị
+  Disp.drawText(0, 0, text_static); //Disp.drawText(vị trí x, vị trí y, String cần hiển thị)
+  Scrolling_Text(8, 60); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
+  
+
 }
