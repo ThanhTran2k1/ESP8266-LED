@@ -43,7 +43,7 @@ const char* ssid = "AIoT Tang 1"; // tên WIFI
 const char* password = "aiot1234@"; // Mật khẩu WIFI
 //mqtt server
 const char* mqtt_server = "aiot-jsc1.ddns.net"; // Server MQTT
-const uint16_t mqtt_port = 1889; // Nghe Port
+const uint16_t mqtt_port = 1889; // Nghe Port       
 const char* usernameMQTT = "bangled"; // Tên đăng nhập MQTT
 const char* passMQTT = "bangled"; // Mật khẩu MQTT
 //text Scrolling
