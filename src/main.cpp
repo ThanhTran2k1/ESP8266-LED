@@ -1,12 +1,16 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h> // Thư viện WIFI
-#include <WiFiManager.h>
-#include <DNSServer.h>
-#include <ESP8266WebServer.h>
+// Cac thu vien de smart config WIFI
+#include <ESP8266HTTPClient.h> // Thư viện để smart config WIFI
 #include <EEPROM.h>
+#include <ESP8266WebServer.h>
+#include <DNSServer.h>
+#include <EEPROM.h>
+//
 #include <PubSubClient.h> // Thư viện MQTT
 #include <TaskScheduler.h> // Thư viện lập lịch
-//khai báo thư viện
+//khai báo thư viện quet led
 #include <DMDESP.h>
 #include <fonts/Mono5x7.h>
 #include <fonts/ElektronMart6x16.h>
@@ -14,7 +18,24 @@
 #include <fonts/EMSansSP8x16.h>
 #include <fonts/ElektronMart6x8.h>
 #include <fonts/ElektronMart6x12.h> //  chưa tìm ra cách set _font qua MQTT, vẫn phải set font bằng fix cứng
-#include <ArduinoJson.h>
+
+
+// Smart Config WiFi
+int statusCode;
+const char* ssidWF = "text";
+const char* passWF = "text";
+String st;
+String content;
+
+// Khai bao cac ham
+bool testWifi(void);
+void launchWeb(void);
+void setupAP(void);
+
+// Thiet lap server Local tai cong 80 moi khi duoc yeu cau
+ESP8266WebServer server(80);
+
+
 
 
 // Khai báo để quét LED P10
@@ -26,21 +47,20 @@
 DMDESP Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  //--> Number of Panels P10 used (Column, Row)
 String message = "";
 int speed_scroll = 50; //  tốc độ cuộn, tốc độ càng thấp cuộn càng nhanh.
-WiFiManager wifiManager;
+// WiFiManager wifiManager;
 
 Scheduler runner; // tạo con trỏ để chạy Scheduler
 // Callback methods prototypes
-void setupWiFi();
-void t2Callback();
-void t3Callback(); 
+
+void connectionWiFi(); 
 void connectMQTTCallback();
 // Tasks
-Task t1(2000, TASK_ONCE, &setupWiFi, &runner, true);  //adding task to the chain on creation
-Task t2(0.2, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the chain on creation
-Task connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
+Task task_connectWifi(2000, TASK_ONCE, &connectionWiFi, &runner, true);  //adding task to the chain on creation
+// Task t2(0.2, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the chain on creation
+Task task_connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
 //wifi
-const char* ssid = "AIoT Tang 1"; // tên WIFI
-const char* password = "aiot1234@"; // Mật khẩu WIFI
+// const char* ssid = "AIoT Tang 1"; // tên WIFI
+// const char* password = "aiot1234@"; // Mật khẩu WIFI
 //mqtt server
 const char* mqtt_server = "aiot-jsc1.ddns.net"; // Server MQTT
 const uint16_t mqtt_port = 1889; // Nghe Port       
@@ -88,15 +108,17 @@ void callback(char* topic, byte* payload, int length)
 // Kết nối tới MQTT server
 void connectMQTTCallback() {
   client.setServer(mqtt_server,mqtt_port);
+  client.setCallback(callback); //  duy trì kết nối MQTT để nhận dữ liệu
+
 }
 
 // Kết nối WIFI. 
-void setupWiFi() {
+void connectionWiFi() {
   Serial.println();
   Serial.print("Đang kết nối tới ");
-  Serial.println(ssid);
+  Serial.println(ssidWF);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssidWF, passWF);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print("..");
@@ -105,12 +127,11 @@ void setupWiFi() {
   Serial.println("Đã kết nối WiFi !");
   Serial.println("Địa chỉ IP: ");
   Serial.println(WiFi.localIP());
-  connectMQTT.enable(); // sau khi kết nối WIFI thì kết nối MQTT để nhận dữ liệu
+  task_connectMQTT.enable(); // sau khi kết nối WIFI thì kết nối MQTT để nhận dữ liệu
 }
 
-void t2Callback() {
-  client.setCallback(callback); //  duy trì kết nối MQTT để nhận dữ liệu
-}
+// void t2Callback() {
+// }
 
 // Nếu mất kết nối thì reconnect
 void reconnect() {
@@ -154,6 +175,15 @@ void Scrolling_Text(int y, uint8_t scrolling_speed) {
     Disp.drawText(width - x, y, Text[0]);
   }  
 }
+
+// void wifiConfigFunc() {
+//   bool res;
+//   // res = wm.autoConnect("ESP8266-Config-MODE","12345678");
+//   if(!res) {
+//     Serial.println("Failed to connect");
+//   }
+// }
+
 
 void setup () {
   Serial.begin(115200);
