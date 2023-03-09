@@ -367,9 +367,9 @@ void loop () {
   } // Nếu mất kết nối thì tự động kết nối lại
   client.loop(); // Giữ kết nối.
   Disp.loop(); // Bắt buộc phải có hàm này trong loop để quét LED hiển thị
-  Disp.drawText(0, 0, text_static); //Disp.drawText(vị trí x, vị trí y, String cần hiển thị)
+  Disp.drawText(0, 1, text_static); //Disp.drawText(vị trí x, vị trí y, String cần hiển thị)
   // Disp.setFont(ElektronMart6x16);
-  Scrolling_Text(16, speed_scroll); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
+  Scrolling_Text(17, speed_scroll); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
   // Disp.drawChar(0,0,'------');
 
 }
