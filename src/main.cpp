@@ -36,10 +36,6 @@ void readEEPROM(void);
 // Thiet lap server Local tai cong 80 moi khi duoc yeu cau
 ESP8266WebServer server(80);
 
-
-
-
-
 // Khai báo để quét LED P10
 #define DISPLAYS_WIDE 2 //--> Số cột của tấm LED
 #define DISPLAYS_HIGH 2 //--> Số hàng của tấm LED
@@ -194,7 +190,7 @@ void setupAP(void)
   }
   st += "</ol>";
   delay(100);
-  WiFi.softAP("how2electronics", "");
+  WiFi.softAP("ESP8266-WiFi-Config", "12345678");
   Serial.println("softap");
   launchWeb();
   Serial.println("over");
@@ -218,19 +214,6 @@ void connectionWiFi() {
     delay(300);
     server.handleClient();
   }
-  // Serial.println();
-  // Serial.print("Đang kết nối tới ");
-  // Serial.println(ssidWF);
-  // WiFi.mode(WIFI_STA);
-  // WiFi.begin(ssidWF, passWF);
-  // while (WiFi.status() != WL_CONNECTED) {
-  //   delay(500);
-  //   Serial.print("..");
-  // }
-  // Serial.println("");
-  // Serial.println("Đã kết nối WiFi !");
-  // Serial.println("Địa chỉ IP: ");
-  // Serial.println(WiFi.localIP());
   
 }
 
@@ -363,15 +346,6 @@ void Scrolling_Text(int y, uint8_t scrolling_speed) {
     Disp.drawText(width - x, y, Text[0]);
   }  
 }
-
-// void wifiConfigFunc() {
-//   bool res;
-//   // res = wm.autoConnect("ESP8266-Config-MODE","12345678");
-//   if(!res) {
-//     Serial.println("Failed to connect");
-//   }
-// }
-
 
 void setup () {
   Serial.begin(115200);
