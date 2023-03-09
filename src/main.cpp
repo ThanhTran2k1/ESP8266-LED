@@ -59,9 +59,9 @@ void connectMQTTCallback();
 void keepAliveCallback();
 void t2Callback();
 // Tasks
-Task task_connectWifi(2000, TASK_FOREVER, &connectionWiFi, &runner, true);  //adding task to the chain on creation
-Task task_connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, NULL, false);
-Task t2(0.2, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the chain on creation
+Task task_connectWifi(2000, TASK_ONCE, &connectionWiFi, &runner, true);  //adding task to the chain on creation
+Task task_connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
+// Task t2(0.2, TASK_FOREVER, &t2Callback, &runner, true);  //adding task to the chain on creation
 //wifi
 // const char* ssid = "AIoT Tang 1"; // tên WIFI
 // const char* password = "aiot1234@"; // Mật khẩu WIFI
@@ -380,8 +380,8 @@ void setup () {
   EEPROM.begin(512); // khoi tao EEPROM de luu WIFI
   Disp.start(); // Khởi tạo hàm hiển thị
   Disp.setBrightness(100); // Thay đổi độ sáng 
-  runner.addTask(task_connectWifi);
-  // runner.startNow();  // Khởi tạo bộ lên lịch Scheduler và chạy bằng con trỏ runner
+  // runner.addTask(task_connectWifi);
+  runner.startNow();  // Khởi tạo bộ lên lịch Scheduler và chạy bằng con trỏ runner
 }
 
 
