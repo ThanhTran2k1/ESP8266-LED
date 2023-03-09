@@ -22,8 +22,8 @@
 
 // Smart Config WiFi
 int statusCode;
-const char* ssidWF = "text";
-const char* passWF = "text";
+const char* ssidWF = "AIoT Tang 1";
+const char* passWF = "aiot1234@";
 String st;
 String content;
 
