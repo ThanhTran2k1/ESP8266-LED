@@ -13,4 +13,11 @@ D1 // nut nhan config wifi
 D2
 D4 // LED buillin
 
+Chuỗi JSON bao gồm các thông số sau:
+line
+x1Axis
+y2Axis
+y2Axis
+content
+speed
 

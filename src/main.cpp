@@ -19,15 +19,21 @@
 #include <fonts/EMSansSP8x16.h>
 #include <fonts/ElektronMart6x8.h>
 #include <fonts/ElektronMart6x12.h> //  chưa tìm ra cách set _font qua MQTT, vẫn phải set font bằng fix cứng
+#include <fonts/DejaVuSansItalic9.h>
+#include <fonts/SystemFont5x7.h>
 
 
 // Smart Config WiFi
 int statusCode;
 const char* ssidWF = "text";
 const char* passWF = "text";
+// khai báo để nhận dữ liệu từ MQTT
 String st;
+int x1Axis = 3;
+int y1Axis = 2;
+int y2Axis = 17;
 String content;
-
+int speed_scroll = 50; //  tốc độ cuộn, tốc độ càng thấp cuộn càng nhanh.
 // Khai bao cac ham
 bool testWifi(void);
 void launchWeb(void);
@@ -38,14 +44,14 @@ void readEEPROM(void);
 ESP8266WebServer server(80);
 
 // Khai báo để quét LED P10
-#define DISPLAYS_WIDE 2 //--> Số cột của tấm LED
+#define DISPLAYS_WIDE 1 //--> Số cột của tấm LED
 #define DISPLAYS_HIGH 2 //--> Số hàng của tấm LED
 // Khai báo WIDE = 1, HIGH = 1 tức là tấm LED 16x32;
 // Khai báo WIDE = 2, HIGH = 1 tức là tấm LED 16x64;
 // Khai báo WIDE = 2, HIGH = 2 tức là tấm LED 32x64;
 DMDESP Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  //--> Number of Panels P10 used (Column, Row)
 String message = "";
-int speed_scroll = 50; //  tốc độ cuộn, tốc độ càng thấp cuộn càng nhanh.
+
 // WiFiManager wifiManager;
 
 Scheduler runner; // tạo con trỏ để chạy Scheduler
@@ -90,6 +96,7 @@ void callback(char* topic, byte* payload, int length)
   int line = doc["line"];
   String content = doc["content"];
   int speed = doc["speed"];
+  
   Serial.print("Có tin nhắn mới từ topic: ");
   Serial.println(topic);
   Serial.print("Line: ");
@@ -102,9 +109,12 @@ void callback(char* topic, byte* payload, int length)
     // nếu line = 2 thì thay đổi giá trị của mảng Text[0] thành giá trị String content vừa nhận được.
     strcpy(Text[0],content.c_str());
     speed_scroll = doc["speed"];
+    y2Axis = doc["y2Axis"];
   }
   if(line == 1) {
     text_static = content;
+    x1Axis = doc["x1Axis"];
+    y1Axis = doc["y1Axis"];
   }
   content.clear();
 }
@@ -337,7 +347,7 @@ void Scrolling_Text(int y, uint8_t scrolling_speed) {
   static uint32_t pM;
   static int x;
   int width = Disp.width();
-  Disp.setFont(ElektronMart6x12); // Chọn font để hiển thị.
+  Disp.setFont(System5x7); // Chọn font để hiển thị.
   int fullScroll = Disp.textWidth(Text[0]) + width;
   if((millis() - pM) > scrolling_speed) { 
     pM = millis();
@@ -357,7 +367,7 @@ void setup () {
   WiFi.disconnect();
   EEPROM.begin(512); // khoi tao EEPROM de luu WIFI
   Disp.start(); // Khởi tạo hàm hiển thị
-  Disp.setBrightness(100); // Thay đổi độ sáng 
+  Disp.setBrightness(70); // Thay đổi độ sáng 
   // runner.addTask(task_connectWifi);
   runner.startNow();  // Khởi tạo bộ lên lịch Scheduler và chạy bằng con trỏ runner
 }
@@ -370,9 +380,9 @@ void loop () {
   } // Nếu mất kết nối thì tự động kết nối lại
   client.loop(); // Giữ kết nối.
   Disp.loop(); // Bắt buộc phải có hàm này trong loop để quét LED hiển thị
-  Disp.drawText(0, 1, text_static); //Disp.drawText(vị trí x, vị trí y, String cần hiển thị)
+  Disp.drawText(x1Axis, y1Axis, text_static); //Disp.drawText(vị trí x, vị trí y, String cần hiển thị)
   // Disp.setFont(ElektronMart6x16);
-  Scrolling_Text(17, speed_scroll); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
+  Scrolling_Text(y2Axis, speed_scroll); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
   // Disp.drawChar(0,0,'------');
 
 }
