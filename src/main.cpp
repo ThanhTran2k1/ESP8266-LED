@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h> // Thư viện WIFI
+#include <WiFiClientSecure.h>
 // Cac thu vien de smart config WIFI
 #include <ESP8266HTTPClient.h> // Thư viện để smart config WIFI
 #include <EEPROM.h>
@@ -63,14 +64,14 @@ Task task_connectMQTT(2000, TASK_ONCE, &connectMQTTCallback, &runner, true);
 // const char* password = "aiot1234@"; // Mật khẩu WIFI
 //mqtt server
 const char* mqtt_server = "aiot-jsc1.ddns.net"; // Server MQTT
-const uint16_t mqtt_port = 1889; // Nghe Port       
+const uint16_t mqtt_port = 8883; // Nghe Port       
 const char* usernameMQTT = "bangled"; // Tên đăng nhập MQTT
 const char* passMQTT = "bangled"; // Mật khẩu MQTT
 //text Scrolling
 static char *Text[]={"CONFIG-LED"}; // Nội dung lần đầu khi nạp cho chip. Đây là dòng chạy scroll,. Nội dung này sẽ bị thay đổi khi có 1 payload bắn qua MQTT
 // text static
 String text_static = "MODE";// Nội dung lần đầu khi nạp cho chip. Đây là dòng đứng yên
-WiFiClient espClient;// Khai báo một Client
+WiFiClientSecure espClient;// Khai báo một Client
 PubSubClient client(espClient); // Khai báo PubSub để nhận dữ liệu
 
 //json
@@ -88,13 +89,15 @@ void callback(char* topic, byte* payload, int length)
 
   int line = doc["line"];
   String content = doc["content"];
-  
+  int speed = doc["speed"];
   Serial.print("Có tin nhắn mới từ topic: ");
   Serial.println(topic);
   Serial.print("Line: ");
   Serial.println(line);
   Serial.print("Content: ");
   Serial.println(content);
+  Serial.print("Tốc độ: ");
+  Serial.println(speed);
   if(line == 2) {
     // nếu line = 2 thì thay đổi giá trị của mảng Text[0] thành giá trị String content vừa nhận được.
     strcpy(Text[0],content.c_str());
@@ -107,6 +110,7 @@ void callback(char* topic, byte* payload, int length)
 }
 // Kết nối tới MQTT server
 void connectMQTTCallback() {
+  espClient.setInsecure();
   client.setServer(mqtt_server,mqtt_port);
   client.setCallback(callback); //  duy trì kết nối MQTT để nhận dữ liệu
 
@@ -191,19 +195,19 @@ void setupAP(void)
   st += "</ol>";
   delay(100);
   WiFi.softAP("ESP8266-WiFi-Config", "12345678");
-  Serial.println("softap");
+  Serial.println("Soft AP");
   launchWeb();
-  Serial.println("over");
+  Serial.println("Xong");
 }
 
 // Kết nối WIFI. 
 void connectionWiFi() {
   readEEPROM();
   if(testWifi()) {
-    Serial.println("Ket noi WiFi thanh cong !");
+    Serial.println("Kết nối WiFi thành công !");
     task_connectMQTT.enable(); // sau khi kết nối WIFI thì kết nối MQTT để nhận dữ liệu
   }else {
-    Serial.println("bat che do HostPot");
+    Serial.println("Bật chế độ HostPost");
     launchWeb();
     setupAP();
   }
@@ -315,7 +319,7 @@ void reconnect() {
     if (client.connect(clientId.c_str(),usernameMQTT,passMQTT)) {
       Serial.println("Đã kết nối !");
       // ... and resubscribe
-      client.subscribe("text-content"); // topic cần subscribe
+      client.subscribe("$text-content"); // topic cần subscribe
       // client.subscribe("static-text");
     } else { // nếu không kết nối thì kết nối lại sau 5s
       Serial.print("Kết nối MQTT thất bại, rc=");
