@@ -360,7 +360,6 @@ void setup () {
 
 
 void loop () {
-  
   runner.execute(); // Xử lý bộ lên lịch
   if(!client.connected()) {
     reconnect();
