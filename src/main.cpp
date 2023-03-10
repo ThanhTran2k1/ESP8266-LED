@@ -31,7 +31,8 @@ const char* passWF = "text";
 String st;
 int x1Axis = 3;
 int y1Axis = 2;
-int y2Axis = 17;
+
+int y2AxisR = 17;
 String content;
 int speed_scroll = 50; //  tốc độ cuộn, tốc độ càng thấp cuộn càng nhanh.
 // Khai bao cac ham
@@ -105,11 +106,15 @@ void callback(char* topic, byte* payload, int length)
   Serial.println(content);
   Serial.print("Tốc độ: ");
   Serial.println(speed);
+  Disp.clear(false);
   if(line == 2) {
     // nếu line = 2 thì thay đổi giá trị của mảng Text[0] thành giá trị String content vừa nhận được.
     strcpy(Text[0],content.c_str());
-    speed_scroll = doc["speed"];
-    y2Axis = doc["y2Axis"];
+    int tempSpeed = doc["speed"];
+    speed_scroll = pow(tempSpeed,-1);
+    int tempY2 = doc["y2Axis"];
+    y2AxisR = tempY2+16;
+    
   }
   if(line == 1) {
     text_static = content;
@@ -382,7 +387,7 @@ void loop () {
   Disp.loop(); // Bắt buộc phải có hàm này trong loop để quét LED hiển thị
   Disp.drawText(x1Axis, y1Axis, text_static); //Disp.drawText(vị trí x, vị trí y, String cần hiển thị)
   // Disp.setFont(ElektronMart6x16);
-  Scrolling_Text(y2Axis, speed_scroll); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
+  Scrolling_Text(y2AxisR, speed_scroll); //Chữ chạy Scrolling_Text (vị trí y, tốc độ cuộn)
   // Disp.drawChar(0,0,'------');
 
 }
